@@ -11,11 +11,17 @@ if (-not $Neu) {
     $kandidat = Get-ChildItem "$env:USERPROFILE\Downloads\trend-radar*.html" |
         Sort-Object LastWriteTime -Descending | Select-Object -First 1
     if ($null -eq $kandidat) {
-        Write-Host "Keine trend-radar*.html in Downloads gefunden. Pfad angeben: .\update.ps1 <datei>" -ForegroundColor Red
-        exit 1
+        if (Test-Path "$RepoDir\trend-radar.html") {
+            $Neu = "$RepoDir\trend-radar.html"
+            Write-Host "Nichts Neues in Downloads - verwende vorhandene trend-radar.html im Repo-Ordner."
+        } else {
+            Write-Host "Keine trend-radar*.html in Downloads gefunden. Pfad angeben: .\update.ps1 <datei>" -ForegroundColor Red
+            exit 1
+        }
+    } else {
+        $Neu = $kandidat.FullName
+        Write-Host "Neueste Datei aus Downloads: $Neu ($($kandidat.LastWriteTime))"
     }
-    $Neu = $kandidat.FullName
-    Write-Host "Neueste Datei aus Downloads: $Neu ($($kandidat.LastWriteTime))"
 }
 if (-not (Test-Path $Neu)) { Write-Host "Datei nicht gefunden: $Neu" -ForegroundColor Red; exit 1 }
 

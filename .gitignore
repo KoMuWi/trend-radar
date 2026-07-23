@@ -2,3 +2,4 @@ trend-radar.html
 trend-radar-state.json
 *.klartext.html
 logs/
+radar-salt.bin

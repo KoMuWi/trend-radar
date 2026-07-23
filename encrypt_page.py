@@ -8,9 +8,24 @@ from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives.ciphers.aead import AESGCM
 
 ITERATIONS = 600_000
+SALT_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "radar-salt.bin")
+
+def get_salt():
+    """Stabiles Salt, damit die 'Angemeldet bleiben'-Schluessel Updates ueberleben.
+    Das Salt steht ohnehin oeffentlich in der veroeffentlichten Seite; frisch pro
+    Verschluesselung bleibt der GCM-IV."""
+    if os.path.exists(SALT_FILE):
+        with open(SALT_FILE, "rb") as f:
+            salt = f.read()
+        if len(salt) == 16:
+            return salt
+    salt = os.urandom(16)
+    with open(SALT_FILE, "wb") as f:
+        f.write(salt)
+    return salt
 
 def encrypt(html: bytes, password: str):
-    salt = os.urandom(16)
+    salt = get_salt()
     kdf = PBKDF2HMAC(algorithm=hashes.SHA256(), length=32, salt=salt, iterations=ITERATIONS)
     key = kdf.derive(password.encode("utf-8"))
     iv = os.urandom(12)

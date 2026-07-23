@@ -54,9 +54,13 @@ async function deriveKey(pw) {{
   return crypto.subtle.deriveKey({{ name: "PBKDF2", salt: b64(SALT), iterations: ITER, hash: "SHA-256" }},
     mat, {{ name: "AES-GCM", length: 256 }}, true, ["decrypt"]);
 }}
-async function tryDecrypt(key) {{
+async function decryptHtml(key) {{
   const plain = await crypto.subtle.decrypt({{ name: "AES-GCM", iv: b64(IV) }}, key, b64(CT));
-  const html = new TextDecoder().decode(plain);
+  return new TextDecoder().decode(plain);
+}}
+function show(html) {{
+  // Nur auf fertig geladener Seite aufrufen: document.open() waehrend des
+  // Parsens ist ein No-Op und write() haengt den Inhalt sonst nur an.
   document.open(); document.write(html); document.close();
 }}
 async function go() {{
@@ -64,26 +68,31 @@ async function go() {{
   const remember = document.getElementById("remember").checked;
   try {{
     const key = await deriveKey(pw);
+    const html = await decryptHtml(key); // erst validieren (GCM), dann erst merken
     if (remember) {{
       try {{
         const raw = await crypto.subtle.exportKey("raw", key);
         localStorage.setItem("tr_key", btoa(String.fromCharCode(...new Uint8Array(raw))));
       }} catch (e) {{}}
     }}
-    await tryDecrypt(key);
+    show(html);
   }} catch (e) {{
     document.getElementById("err").textContent = "Falsches Passwort — bitte erneut versuchen.";
   }}
 }}
 document.getElementById("pw").addEventListener("keydown", e => {{ if (e.key === "Enter") go(); }});
-(async () => {{
-  try {{
-    const stored = localStorage.getItem("tr_key");
-    if (!stored) return;
-    const key = await crypto.subtle.importKey("raw", b64(stored), {{ name: "AES-GCM" }}, true, ["decrypt"]);
-    await tryDecrypt(key);
-  }} catch (e) {{ try {{ localStorage.removeItem("tr_key"); }} catch (_) {{}} }}
-}})();
+function autoLogin() {{
+  (async () => {{
+    try {{
+      const stored = localStorage.getItem("tr_key");
+      if (!stored) return;
+      const key = await crypto.subtle.importKey("raw", b64(stored), {{ name: "AES-GCM" }}, true, ["decrypt"]);
+      const html = await decryptHtml(key);
+      show(html);
+    }} catch (e) {{ try {{ localStorage.removeItem("tr_key"); }} catch (_) {{}} }}
+  }})();
+}}
+if (document.readyState === "complete") {{ autoLogin(); }} else {{ window.addEventListener("load", autoLogin); }}
 </script>
 </body>
 </html>"""

@@ -25,7 +25,7 @@ function Popup($text) {
 }
 
 # Nur ein Lauf gleichzeitig (Voll-Update und Spike-Check holen sich nach PC-Pause sonst beide zur selben Sekunde nach)
-$mutex = New-Object System.Threading.Mutex($false, "Global\TrendRadarAutoUpdate")
+$mutex = New-Object System.Threading.Mutex($false, "Global\ClaudeAutoUpdate")  # gemeinsam mit Markt-Monitor
 $gotLock = $false
 try {
     $gotLock = $mutex.WaitOne([TimeSpan]::FromMinutes(90))

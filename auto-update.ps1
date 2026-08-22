@@ -11,11 +11,26 @@ $Log = "$RepoDir\logs\auto-update.log"
 function Say($msg, $lvl) {
     if ($null -eq $lvl) { $lvl = "INFO" }
     $line = "{0} [{1}] [{2}] {3}" -f (Get-Date -Format "yyyy-MM-dd HH:mm:ss"), $lvl, $Mode, $msg
-    Add-Content -Path $Log -Value $line -Encoding utf8
+    for ($i = 0; $i -lt 5; $i++) {
+        try { Add-Content -Path $Log -Value $line -Encoding utf8; break } catch { Start-Sleep -Milliseconds 400 }
+    }
     Write-Host $line
 }
 
+function Popup($text) {
+    # Sichtbare Meldung fuer Mark, ohne das Skript zu blockieren (eigener Prozess)
+    $msg = $text -replace "'", "''"
+    $cmd = "Add-Type -AssemblyName System.Windows.Forms; [System.Windows.Forms.MessageBox]::Show('$msg', 'Trend-Radar Auto-Update', 'OK', 'Warning') | Out-Null"
+    Start-Process powershell -ArgumentList "-NoProfile", "-WindowStyle", "Hidden", "-Command", $cmd | Out-Null
+}
+
+# Nur ein Lauf gleichzeitig (Voll-Update und Spike-Check holen sich nach PC-Pause sonst beide zur selben Sekunde nach)
+$mutex = New-Object System.Threading.Mutex($false, "Global\TrendRadarAutoUpdate")
+$gotLock = $false
 try {
+    $gotLock = $mutex.WaitOne([TimeSpan]::FromMinutes(90))
+    if (-not $gotLock) { Say "Anderer Lauf blockiert seit 90 Min - Abbruch." "ERROR"; exit 1 }
+
     Say "=== Lauf gestartet ==="
 
     # Werkzeuge auffinden (Taskplaner-Umgebung hat evtl. keinen frischen PATH)
@@ -29,6 +44,12 @@ try {
     . "$RepoDir\credman.ps1"
     $PW = [TrCredMan]::Read("trend-radar-passwort")
     if ([string]::IsNullOrEmpty($PW)) { throw "Kein Passwort im Credential Manager (setup-passwort.cmd ausfuehren!)" }
+
+    # Login-Check vor der Recherche: abgelaufene CLI-Anmeldung sonst = stiller Dauerfehler
+    $auth = ("Antworte nur mit: OK" | & $Claude -p --max-turns 1 2>&1 | Out-String)
+    if ($LASTEXITCODE -ne 0 -or $auth -match "authenticate|login") {
+        throw "Claude-CLI nicht angemeldet (Sitzung abgelaufen). Terminal oeffnen, 'claude' starten, '/login' eingeben - danach laeuft die Automatik wieder."
+    }
 
     git pull --quiet 2>$null
     $hashVor = (Get-FileHash "$RepoDir\trend-radar.html" -Algorithm SHA256).Hash
@@ -66,5 +87,9 @@ try {
     Say "=== Lauf erfolgreich beendet ==="
 } catch {
     Say "FEHLER: $($_.Exception.Message)" "ERROR"
+    Popup ("Trend-Radar ($Mode) NICHT aktualisiert:`n`n" + $_.Exception.Message + "`n`nProtokoll: logs\auto-update.log")
     exit 1
+} finally {
+    if ($gotLock) { $mutex.ReleaseMutex() }
+    $mutex.Dispose()
 }

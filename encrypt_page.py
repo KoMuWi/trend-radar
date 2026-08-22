@@ -39,21 +39,30 @@ TEMPLATE = """<!DOCTYPE html>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Trend-Radar · geschützt</title>
 <style>
-  body {{ font-family: system-ui, -apple-system, "Segoe UI", sans-serif; background: #f9f9f7; color: #0b0b0b;
-         display: flex; align-items: center; justify-content: center; min-height: 100vh; margin: 0; }}
-  @media (prefers-color-scheme: dark) {{ body {{ background: #0d0d0d; color: #fff; }} .box {{ background: #1a1a19 !important; border-color: rgba(255,255,255,.1) !important; }} input {{ background:#0d0d0d; color:#fff; border-color:#383835 !important; }} }}
-  .box {{ background: #fcfcfb; border: 1px solid rgba(11,11,11,.1); border-radius: 14px; padding: 34px 38px; max-width: 380px; width: 90%; text-align: center; }}
-  h1 {{ font-size: 20px; margin: 0 0 6px; }}
-  p {{ font-size: 13.5px; color: #898781; margin: 0 0 20px; }}
-  input {{ width: 100%; box-sizing: border-box; font: inherit; padding: 10px 12px; border-radius: 8px; border: 1px solid #c3c2b7; margin-bottom: 12px; }}
-  button {{ width: 100%; font: inherit; font-weight: 600; padding: 10px; border-radius: 8px; border: none; background: #2a78d6; color: #fff; cursor: pointer; }}
-  button:hover {{ background: #1c5cab; }}
-  label {{ font-size: 12.5px; color: #898781; display: flex; gap: 6px; align-items: center; justify-content: center; margin-bottom: 14px; }}
+  body {{ font-family: Calibri, "Segoe UI", system-ui, sans-serif; background: #0F3460; color: #15325C;
+         display: flex; align-items: center; justify-content: center; min-height: 100vh; margin: 0;
+         background-image: repeating-linear-gradient(0deg, transparent, transparent 79px, #184A82 79px, #184A82 80px),
+                           repeating-linear-gradient(90deg, transparent, transparent 79px, #184A82 79px, #184A82 80px); }}
+  .mark {{ position: fixed; width: 26px; height: 26px; border: 0 solid #FF7A00; }}
+  .mark.tl {{ top: 18px; left: 18px; border-top-width: 2px; border-left-width: 2px; }}
+  .mark.tr {{ top: 18px; right: 18px; border-top-width: 2px; border-right-width: 2px; }}
+  .mark.bl {{ bottom: 18px; left: 18px; border-bottom-width: 2px; border-left-width: 2px; }}
+  .mark.br {{ bottom: 18px; right: 18px; border-bottom-width: 2px; border-right-width: 2px; }}
+  .box {{ background: #FFFFFF; border: 1px solid #BBD3EE; border-radius: 14px; padding: 34px 38px; max-width: 380px; width: 90%; text-align: center; }}
+  .kicker {{ font-family: "Courier New", monospace; font-size: 11px; font-weight: bold; letter-spacing: 1px; color: #FF7A00; margin: 0 0 8px; }}
+  h1 {{ font-size: 20px; margin: 0 0 6px; color: #15325C; }}
+  p {{ font-size: 13.5px; color: #4A6FA5; margin: 0 0 20px; }}
+  input {{ width: 100%; box-sizing: border-box; font: inherit; padding: 10px 12px; border-radius: 8px; border: 1px solid #BBD3EE; margin-bottom: 12px; color: #15325C; }}
+  button {{ width: 100%; font: inherit; font-weight: 600; padding: 10px; border-radius: 8px; border: none; background: #FF7A00; color: #fff; cursor: pointer; }}
+  button:hover {{ background: #E06900; }}
+  label {{ font-size: 12.5px; color: #4A6FA5; display: flex; gap: 6px; align-items: center; justify-content: center; margin-bottom: 14px; }}
   #err {{ color: #d03b3b; font-size: 13px; min-height: 18px; margin-top: 10px; }}
 </style>
 </head>
 <body>
+<div class="mark tl"></div><div class="mark tr"></div><div class="mark bl"></div><div class="mark br"></div>
 <div class="box">
+  <div class="kicker">[TREND-RADAR]</div>
   <h1>📈 Trend-Radar</h1>
   <p>Webshop-Projekt — bitte Team-Passwort eingeben</p>
   <input type="password" id="pw" placeholder="Passwort" autofocus>

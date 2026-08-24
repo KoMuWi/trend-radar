@@ -58,7 +58,7 @@ try {
     $promptDatei = if ($Mode -eq "voll") { "radar-auftrag-voll.md" } else { "radar-auftrag-spike.md" }
     $prompt = Get-Content "$RepoDir\$promptDatei" -Raw -Encoding UTF8
     Say "Starte Claude-Recherche ($promptDatei) ..."
-    $prompt | & $Claude -p --allowedTools "WebSearch,WebFetch,Read,Write,Edit,Glob,Grep" --permission-mode acceptEdits --max-turns 120 | Out-File "$RepoDir\logs\claude-output.txt" -Encoding utf8
+    $prompt | & $Claude -p --allowedTools "WebSearch,WebFetch,Read,Write,Edit,Glob,Grep" --permission-mode acceptEdits --max-turns 300 | Out-File "$RepoDir\logs\claude-output.txt" -Encoding utf8
     if ($LASTEXITCODE -ne 0) { throw "Claude-Lauf fehlgeschlagen (Exit $LASTEXITCODE) - siehe logs\claude-output.txt" }
 
     $hashNach = (Get-FileHash "$RepoDir\trend-radar.html" -Algorithm SHA256).Hash
